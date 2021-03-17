@@ -103,7 +103,7 @@ public class ProductoRestController {
 			productoActual.setDescripcion(producto.getDescripcion());
 			productoActual.setPrecio(producto.getPrecio());
 
-			productoUpdate = productoService.save(productoUpdate);
+			productoUpdate = productoService.save(productoActual);
 		} catch (DataAccessException e) {
 			response.put("mensaje", "Error al hacer el update en la base de datos, intentelo de nuevo más tarde.");
 			response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
