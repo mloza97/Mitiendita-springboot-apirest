@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mloza.springboot.backend.apirest.models.Producto;
 import com.mloza.springboot.backend.apirest.service.IProductoService;
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200","*"})
 @RestController
 @RequestMapping("/api")
 public class ProductoRestController {
