@@ -1,13 +1,21 @@
 package com.mloza.springboot.backend.apirest.controller;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +24,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.mloza.springboot.backend.apirest.models.Producto;
 import com.mloza.springboot.backend.apirest.service.IProductoService;
+import com.mloza.springboot.backend.apirest.service.IUploadFileService;
 
 @CrossOrigin(origins = {"http://localhost:4200","*"})
 @RestController
@@ -29,6 +40,11 @@ public class ProductoRestController {
 
 	@Autowired
 	private IProductoService productoService;
+	
+	@Autowired
+	private IUploadFileService uploadService;
+	
+	private final Logger log = org.slf4j.LoggerFactory.getLogger(ProductoRestController.class);
 	
 	@GetMapping("/productos")
 	public List<Producto> index(){
@@ -59,10 +75,23 @@ public class ProductoRestController {
 	
 	@PostMapping("/productos")
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<?> create(@RequestBody Producto producto) {
+	public ResponseEntity<?> create(@Valid @RequestBody Producto producto, BindingResult result) {
 		
 		Producto productoNew = null;
 		Map<String, Object> response = new HashMap<>();
+		
+		////////////////////Validation///////////////////////////////////////////////
+		if (result.hasErrors()) {
+		
+		List<String> errors = result.getFieldErrors().stream()
+				.map(err -> "El campo '" + err.getField() + "' " + err.getDefaultMessage())
+				.collect(Collectors.toList());
+		
+		response.put("errors", errors);
+		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////
 
 		try {
 			productoNew = productoService.save(producto);
@@ -79,11 +108,21 @@ public class ProductoRestController {
 	}
 	
 	@PutMapping("/productos/{id}")
-	public ResponseEntity<?> update(@RequestBody Producto producto, @PathVariable Long id) {
+	public ResponseEntity<?> update(@Valid @RequestBody Producto producto, BindingResult result, @PathVariable Long id) {
 		Producto productoUpdate = null;
 		Producto productoActual = null;
 
 		Map<String, Object> response = new HashMap<>();
+		
+		if (result.hasErrors()) {
+			List<String> lErrors = result.getFieldErrors().stream()
+					.map(error -> "El campo '" + error.getField() + "' " + error.getDefaultMessage())
+					.collect(Collectors.toList());
+
+			response.put("errors", lErrors);
+			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.BAD_REQUEST);
+		}
+
 
 		try {
 			productoActual = productoService.findById(id);
@@ -131,9 +170,55 @@ public class ProductoRestController {
 			return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		response.put("mesnaje", "El producto se ha eliminado con exito.");
+		response.put("mensaje", "El producto se ha eliminado con exito.");
 		
 		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.OK);
 		
+	}
+	
+	@PostMapping("/productos/upload")
+	public ResponseEntity<?> upload(@RequestParam("archivo") MultipartFile archivo, @RequestParam("id") Long id) {
+		Map<String, Object> response = new HashMap<>();
+		Producto producto = productoService.findById(id);
+
+		if (!archivo.isEmpty()) {
+			String nombreArchivo = null;
+			try {
+				nombreArchivo = uploadService.copiar(archivo);
+			} catch (IOException e) {
+				response.put("mensaje", "Error al subir el archivo, intentelo de nuevo más tarde.");
+				response.put("error", e.getMessage().concat(": ").concat(e.getCause().getMessage()));
+				return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+
+			String nombreFotoAnterior = producto.getFoto();
+			uploadService.eliminar(nombreFotoAnterior);
+			
+			producto.setFoto(nombreArchivo);
+			productoService.save(producto);
+
+			response.put("producto", producto);
+			response.put("mensaje", "Archivo cargado con exito: " + nombreArchivo);
+
+		}
+		return new ResponseEntity<Map<String, Object>>(response, HttpStatus.OK);
+
+	}
+	
+	@GetMapping("/uploads/archivo/{nombreArchivo:.+}")
+	public ResponseEntity<Resource> verArchivo(@PathVariable String nombreArchivo){
+		Resource recurso = null;
+		
+		try {
+			recurso = uploadService.cargar(nombreArchivo);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		org.springframework.http.HttpHeaders cabecera = new org.springframework.http.HttpHeaders();
+		cabecera.add(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename =\"" + 
+		recurso.getFilename() + "\"");
+		
+		return new ResponseEntity<Resource>(recurso, cabecera, HttpStatus.OK);
 	}
 }
