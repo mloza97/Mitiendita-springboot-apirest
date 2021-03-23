@@ -24,17 +24,16 @@ public class SwaggerConfig {
 				.apis(RequestHandlerSelectors.basePackage("com.mloza.springboot.backend.apirest.controller"))
 				.paths(PathSelectors.any())
 				.build()
-				.apiInfo(getApiInfo())
-				;
+				.apiInfo(getApiInfo());
 	}
 	
 	private ApiInfo getApiInfo() {
 		return new ApiInfo(
-				"Order Service API",
+				"API´s Rest Mi Tiendita",
 				"Order Service API Description",
 				"1.0",
-				"http://codmind.com/terms",
-				new Contact("Codmind", "https://codmind.com", "apis@codmind.com"),
+				"https://github.com/mloza97",
+				new Contact("Manuel Loza", "https://github.com/mloza97", "lozacruzhm92@gmail.com"),
 				"LICENSE",
 				"LICENSE URL",
 				Collections.emptyList()
