@@ -10,6 +10,12 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+/**
+ * Clase tipo modelo
+ * Entidad de Producto, mapeada con BD
+ * @author daniel-loza
+ *
+ */
 @Entity
 @Table(name = "productos")
 public class Producto implements Serializable {
