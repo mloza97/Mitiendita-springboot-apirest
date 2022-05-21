@@ -33,6 +33,12 @@ import com.mloza.springboot.backend.apirest.models.Producto;
 import com.mloza.springboot.backend.apirest.service.IProductoService;
 import com.mloza.springboot.backend.apirest.service.IUploadFileService;
 
+/**
+ * Controlador para gestionar Producto
+ * 21/05/2022
+ * @author daniel-loza
+ *
+ */
 @CrossOrigin(origins = {"http://localhost:4200","*"})
 @RestController
 @RequestMapping("/api")
