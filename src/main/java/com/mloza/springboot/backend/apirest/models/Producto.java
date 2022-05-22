@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
  * Clase tipo modelo
  * Entidad de Producto, mapeada con BD
  * @author daniel-loza
- *
+ * prueba de git hub cuatro mil novecientos 
  */
 @Entity
 @Table(name = "productos")
