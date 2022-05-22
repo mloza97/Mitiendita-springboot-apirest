@@ -15,6 +15,8 @@ import javax.validation.constraints.NotNull;
  * Entidad de Producto, mapeada con BD
  * @author daniel-loza
  * prueba de git hub cuatro mil novecientos 
+ * este archivo se modifico el 22 de mayo del 2022
+ * hello world
  */
 @Entity
 @Table(name = "productos")
